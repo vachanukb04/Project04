@@ -16,7 +16,9 @@ The first development target is a verified inference datapath operating on store
 
 ## Current status
 
-Project structure only. No trained model has been selected, no RTL has been implemented, and no simulation or object-recognition result is claimed.
+The first arithmetic RTL is implemented: scalar INT8 DOT4 with INT32 accumulation, an eight-lane SIMD arithmetic slice, and a configurable INT8 requantizer. Self-checking SystemVerilog tests and a Python numerical reference are included.
+
+Seven Python reference tests pass, and the four canonical SystemVerilog files pass static compilation with zero diagnostics. **Behavioral RTL simulation is pending ChipVerify sign-in.** No trained model or end-to-end object-recognition result is claimed. See [verification status](docs/verification_status.md).
 
 ## Repository structure
 
@@ -26,6 +28,9 @@ Project structure only. No trained model has been selected, no RTL has been impl
 | `tb/` | Self-checking testbenches and compact test vectors |
 | `models/` | Model selection, numerical contract, class map, and artifact metadata |
 | `docs/` | Architecture decisions, verification plan, and simulator workflow |
+| `scripts/` | Integer reference, optional static compiler check, and bundle generation |
+| `tests/` | Python numerical reference tests |
+| `sim/` | Source file list and generated ChipVerify inputs |
 
 ## Proposed data flow
 
@@ -45,6 +50,8 @@ This diagram describes planned behavior. No end-to-end inference system, display
 
 ## First milestones
 
+See [the work packages and acceptance gates](docs/build_plan.md). The first implementation is [specified here](docs/arithmetic_spec.md); its behavioral regression must pass before arithmetic is treated as verified.
+
 1. Select and profile a compact pretrained detector covering many everyday object categories.
 2. Freeze tensor shapes, weights, quantization rules, supported operations, and class labels.
 3. Implement a packed signed INT8 dot-product unit with INT32 accumulation and verify it against a software reference.
@@ -55,7 +62,12 @@ The eventual system includes a custom CPU and programmable parallel compute engi
 
 ## Simulation
 
-See [the ChipVerify workflow](docs/chipverify.md). Source files and testbenches will be versioned here; run logs and waveform dumps are generated outputs.
+See [the ChipVerify workflow](docs/chipverify.md). Use `sim/chipverify/design.sv` and `sim/chipverify/testbench.sv` with top `tb_p04_arithmetic`. Source files and testbenches are versioned here; run logs and waveform dumps are generated outputs.
+
+```sh
+python3 -m unittest discover -s tests -v
+python3 scripts/bundle_chipverify.py --check
+```
 
 ## Model artifacts
 

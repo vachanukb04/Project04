@@ -1,0 +1,2 @@
+# Optional parser/type/elaboration checker; behavioral simulation uses ChipVerify.
+pyslang==12.1.0
