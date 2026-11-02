@@ -1,5 +1,14 @@
 # Verification status
 
+## Persistent feedback learning and visual-memory RTL
+
+The new feedback mode needs no manually collected dataset or pretrained model. RTL extracts RGB high-nibble descriptors, searches up to 64 confirmed examples with L1 distance, and returns visual similarity and crop attributes. The Mac handles camera/voice, staged confirmation, label lookup, and atomic persistent storage. This is episodic appearance matching, not semantic neural-network recognition or online weight training.
+
+Development verification: the 12 new test methods passed, including 14 actual Icarus visual-memory simulations. Independent checks cover memory sizes through 64 examples, exact/extreme distance and ties, descriptors, reset cancellation, and input bubbles. A staged correction followed by confirmation changes the next actual RTL prediction and survives file reload; the other object's example is retained. Memory rejection, exact relabeling, eviction, and stale writers pass. Mock voice subprocess tests cover transcript/error transport and cancellation; they do not validate Apple transcription. The complete final regression passed all 28 test methods, including the prior MLP/arithmetic tests (42 image simulations across the new memory and existing MLP suites). Offline CLI teaching followed by a separate invocation correctly restores the learned label.
+
+Native Swift helper compilation, on-device English speech support, microphone permission, live Mac camera/preview/speech, and real-object matching remain pending Mac testing. The development environment has no Swift/macOS SDK. See [feedback learning guide](feedback_learning.md).
+
+
 ## Local Mac-to-RTL classifier
 
 The new `p04_camera_mlp` network executes complete custom-model inference in SystemVerilog: 768 inputs, 32 ReLU units, up to 16 classes, approximate softmax confidence/rejection, and crop attributes. The Mac adapter does not compute neural predictions and has no software detector fallback.

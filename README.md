@@ -14,7 +14,19 @@ The new Mac test path captures a stable center crop and runs a small custom-trai
 - Begin with stored images and a software numerical reference before adding live camera input.
 - Defer CPU firmware, FPGA selection, and wearable integration.
 
-## Current status
+## Feedback learning from your camera
+
+**New: no manual 20-view dataset is required for feedback mode.** Run:
+
+```bash
+python app/mac_rtl_camera.py learn --speak --voice
+```
+
+Read [setup, voice feedback, and persistent memory](docs/feedback_learning.md). The app captures a stable view, asks you to confirm/correct its tentative guess, and saves confirmed examples across restarts. Y confirms, N rejects, C enters a name, V listens, and Space captures the next view. Voice corrections are staged for confirmation before saving. Native voice requires Apple command-line tools and local microphone/speech permission; typed feedback is available without the helper.
+
+The new `p04_visual_memory.sv` performs descriptor extraction, nearest-example matching, similarity, and crop attributes in actual RTL simulation. This is **simple appearance memory, not a pretrained visual model**: empty memory asks for a name, and similarity does not establish semantic correctness. A learned example can improve later matches but is not guaranteed to recognize new angles or similar-looking products. No manufacturer/model specifications are inferred.
+
+## Previous custom-trained MLP path
 
 **Mac camera -> RTL recognition -> overlay/speech is implemented for a small custom-trained classifier.** Read [the setup and training guide](docs/rtl_camera.md). This version requires at least 20 camera captures for each of 2–16 labels and one offline training run. It is not a pretrained general object detector.
 

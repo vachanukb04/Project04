@@ -3,6 +3,7 @@
 import os
 os.environ.setdefault('OPENBLAS_NUM_THREADS','2')
 import argparse
+import sys
 from concurrent.futures import ThreadPoolExecutor
 import json
 from pathlib import Path
@@ -65,8 +66,12 @@ def train_captures(args):
     train(np.stack(images),targets,labels,args.model,args.epochs)
 
 def main():
+    if len(sys.argv)>1 and sys.argv[1]=='learn':
+        from mac_feedback_camera import main as feedback_main
+        feedback_main(sys.argv[2:])
+        return
     ap=argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('mode',choices=['collect','train','run','image'])
+    ap.add_argument('mode',choices=['collect','train','run','image','learn'])
     ap.add_argument('--label',help='Class name when collecting, for example phone')
     ap.add_argument('--data',type=Path,default=ROOT/'build/rtl_camera/data')
     ap.add_argument('--model',type=Path,default=ROOT/'build/rtl_camera/model')
