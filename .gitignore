@@ -1,0 +1,19 @@
+# Simulation products
+*.vcd
+*.fst
+*.vvp
+obj_dir/
+sim_build/
+build/
+logs/
+
+# Python reference model outputs
+__pycache__/
+*.py[cod]
+.venv/
+
+# Local tools and credentials
+.env
+.env.*
+!.env.example
+.DS_Store
