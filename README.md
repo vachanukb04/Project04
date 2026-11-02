@@ -4,21 +4,26 @@
 
 Custom CPU and GPU hardware in SystemVerilog for looking at an everyday object, identifying it, and displaying or speaking its name.
 
-The first development target is a verified inference datapath operating on stored images. Live camera input, spoken or displayed names, and glasses integration follow that foundation.
+The new Mac test path captures a stable center crop and runs a small custom-trained classifier in actual SystemVerilog simulation. The Mac handles camera access, preview, and speech; FPGA and chip interfaces come later.
 
 ## Initial scope
 
 - Recognize a broad set of everyday objects supported by the selected trained detector; recognition is not restricted to chairs.
 - Develop and verify arithmetic units, memory movement, neural-network kernels, and a programmable SIMD compute engine.
-- Use ChipVerify Lab for SystemVerilog simulation and waveform inspection.
+- Use local Icarus Verilog for the Mac-to-RTL camera path; existing block tests can still run in ChipVerify.
 - Begin with stored images and a software numerical reference before adding live camera input.
 - Defer CPU firmware, FPGA selection, and wearable integration.
 
 ## Current status
 
-The first arithmetic RTL is implemented: scalar INT8 DOT4 with INT32 accumulation, an eight-lane SIMD arithmetic slice, and a configurable INT8 requantizer. Self-checking SystemVerilog tests and a Python numerical reference are included.
+**Mac camera -> RTL recognition -> overlay/speech is implemented for a small custom-trained classifier.** Read [the setup and training guide](docs/rtl_camera.md). This version requires at least 20 camera captures for each of 2–16 labels and one offline training run. It is not a pretrained general object detector.
 
-Seven Python reference tests pass, and the four canonical SystemVerilog files pass static compilation with zero diagnostics. **Full behavioral RTL verification is pending confirmed PASS output.** A user-reported traced run hit ChipVerify's 100 MB waveform limit; the testbench now separates the full untraced regression from a short waveform smoke test. No trained model or end-to-end object-recognition result is claimed. See [verification status](docs/verification_status.md).
+- `app/mac_rtl_camera.py`: five-second stability/focus gate, camera preview, capture collection, offline training, simulator transport, and macOS speech.
+- `rtl/p04_camera_mlp.sv`: full 768 -> 32 ReLU -> N-class fixed-point inference, approximate softmax/rejection, mean RGB, crop brightness, and coarse crop color.
+- `tb/tb_p04_camera_mlp.sv`: file-to-pixel and model loader, reset cancellation checks, and result transport.
+- Verification: 16 test methods passed; 28 actual Icarus image simulations match an independent integer reference. Offline CLI training/export/inference also passed on synthetic color samples. Live Mac GUI/camera/speech and real-object model accuracy require user testing.
+
+The previous `app/mac_camera.py` remains a separate pretrained **software-only** detector. Its model does not run in our RTL. Product model/manufacturer, OCR, multiple-object boxes, and arbitrary everyday recognition are not provided by the new tiny classifier. See [verification status](docs/verification_status.md).
 
 ## Repository structure
 

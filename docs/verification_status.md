@@ -1,12 +1,21 @@
 # Verification status
 
+## Local Mac-to-RTL classifier
+
+The new `p04_camera_mlp` network executes complete custom-model inference in SystemVerilog: 768 inputs, 32 ReLU units, up to 16 classes, approximate softmax confidence/rejection, and crop attributes. The Mac adapter does not compute neural predictions and has no software detector fallback.
+
+Development validation used Icarus Verilog 12.0 and Linux: 16 test methods passed, including 28 actual image simulations compared with an independent signed-integer reference. Cases cover random models/images, hidden saturation, 16-class output, all crop-color branches, score rejection and argmax ties. Each simulation cancels a partial input frame with reset and then processes the full frame with retained model memories. Model checksum rejection and five-real-second stability/motion/focus/gap behavior also passed. A CLI smoke test collected synthetic files offline, trained/exported a network, and classified synthetic red through RTL, reporting mean RGB [211, 11, 11], brightness 71, and red color.
+
+The synthetic training validation split achieved 100%; this is a plumbing check on easy synthetic colors, **not evidence of real-object accuracy**. No pretrained general model ships with this path. Users must collect and train their own classes. Live macOS permission handling, capture, preview, speech, and fresh-object accuracy remain pending local user testing. No synthesis, FPGA or ASIC results are claimed. See [Mac RTL camera guide](rtl_camera.md).
+
+
 ## Mac camera app and camera-stream RTL
 
 The local camera app's saved-image path detected dog at score 0.749295 and saved an annotated image and JSON report. Eleven Python tests passed in the development environment, including frame annotation and latest-frame capture helper checks. Tests used headless OpenCV 4.14.0.94 in Linux; live Mac AVFoundation capture, window display, permission prompts and speech were not exercised. The new abstract camera-stream RTL and testbench pass static compilation with zero diagnostics; their behavioral simulation is pending. The software detector does not execute the custom RTL. See [the execution boundary and run instructions](mac_camera.md).
 
 ## Real image neural network milestone
 
-A CPU software run of pretrained SSDLite320 MobileNet V3 Large COCO_V1 detected dog with score approximately 0.7493 in the public PyTorch dog photograph. Eight quantized first-convolution patch accumulators were independently checked against torch conv2d. Nine Python test methods pass, including packed vector checks. The new five-file SystemVerilog suite passes static compilation with zero diagnostics; generated bundles match sources. The user supplied `PASS Project04 real-image convolution patches`, `real_image_patches=8 jobs=13 pixel_triplets=256 host_checks=132`, and normal Verilog finish. This is user-reported first-layer integration evidence, not full RTL object detection. See [the detailed scope](image_nn.md): full object detection remains software-only; RTL currently implements pixel centering and first-layer accumulation arithmetic.
+A CPU software run of pretrained SSDLite320 MobileNet V3 Large COCO_V1 detected dog with score approximately 0.7493 in the public PyTorch dog photograph. Eight quantized first-convolution patch accumulators were independently checked against torch conv2d. Nine Python test methods pass, including packed vector checks. The new five-file SystemVerilog suite passes static compilation with zero diagnostics; generated bundles match sources. The user supplied `PASS Project04 real-image convolution patches`, `real_image_patches=8 jobs=13 pixel_triplets=256 host_checks=132`, and normal Verilog finish. This is user-reported first-layer integration evidence, not full RTL object detection. See [the detailed scope](image_nn.md): this pretrained COCO detector remains software-only; that milestone's RTL implements pixel centering and first-layer accumulation. The separate tiny custom-class MLP above now provides complete RTL classification.
 
 ## Memory engine integration
 
