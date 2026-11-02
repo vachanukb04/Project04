@@ -62,6 +62,8 @@ The eventual system includes a custom CPU and programmable parallel compute engi
 
 ## Simulation
 
+The next integration milestone is implemented: [memory-backed DOT4 engine](docs/memory_engine.md). It adds scratchpad memory, a read/compute/write controller, and a separate self-checking suite. Use the pair of files in `sim/chipverify_memory/` with top `tb_p04_dot4_engine`. Its static checks pass; its behavioral simulation is ready to run in ChipVerify.
+
 See [the ChipVerify workflow](docs/chipverify.md). Use `sim/chipverify/design.sv` and `sim/chipverify/testbench.sv` with top `tb_p04_arithmetic`. Source files and testbenches are versioned here; run logs and waveform dumps are generated outputs.
 
 ```sh

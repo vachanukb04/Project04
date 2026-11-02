@@ -1,5 +1,9 @@
 # Verification status
 
+## Memory engine integration
+
+The scratchpad and memory-backed DOT4 controller are implemented with a separate integration testbench. Its four canonical files pass static compilation with zero diagnostics using pyslang 12.1.0; its generated bundle passes consistency checking. Behavioral execution of **this new suite** is pending ChipVerify. See [the memory-engine specification and run instructions](memory_engine.md). The arithmetic-run history below is separate from this new integration status.
+
 ## Completed checks
 
 - Python numerical reference: **7 unittest methods passed**, covering packed signed operands, wrap/overflow, rounding ties and neighbors, zero/extreme multipliers, all shift values, activation clamps, invalid configuration and invalid reference API inputs.
