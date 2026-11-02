@@ -12,4 +12,8 @@ Record these before inference RTL is frozen:
 - MAC count, peak live tensors, memory traffic, and held-out recognition quality.
 - Golden intermediate tensors and expected detections for repeatable tests.
 
-No model or weights are included yet. Model training and software conversion are distinct from designing custom RTL.
+No complete model weights are redistributed; compact learned-filter test vectors are included. Model training and software conversion are distinct from designing custom RTL.
+
+## Selected software baseline
+
+SSDLite320 MobileNet V3 Large COCO_V1 supplies a pretrained software detector with 80 object categories. Its source, weight hash, sample image provenance, software detections and first-layer patch vectors are recorded in `examples/image_nn/vectors.json`. See [the real-image milestone](../docs/image_nn.md). This selects a baseline for investigation, not a frozen end-to-end RTL-compatible quantized graph. Full model operator mapping and accuracy calibration remain open.

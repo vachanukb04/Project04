@@ -36,3 +36,7 @@ See [the arithmetic specification](arithmetic_spec.md), [the ChipVerify run proc
 ## Next executable step
 
 Load the latest supplied bundle into ChipVerify with top `tb_p04_arithmetic`, run the full regression with empty runtime arguments, and resolve any simulator diagnostics or functional failures. Use the separate `+WAVES` mode for a short waveform test. Preserve the console result and exact source hashes. Package 1 is not behaviorally verified until the full regression succeeds.
+
+## Real image progress
+
+The first real-photo software detector and learned-filter test vectors are available. A packed convolution patch engine extends the single DOT4 job to seven word pairs for a 3 by 3 RGB window; an independent pixel-centering stage is also implemented. Static and software-reference checks pass; the new ChipVerify suite is pending. See [the current scope](image_nn.md). Full feature-map scheduling, normalization/resize in RTL, batch normalization, nonlinearities, remaining model layers, detection decoding and labels in RTL remain outstanding.

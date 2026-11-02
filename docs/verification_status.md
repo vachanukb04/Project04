@@ -1,5 +1,9 @@
 # Verification status
 
+## Real image neural network milestone
+
+A CPU software run of pretrained SSDLite320 MobileNet V3 Large COCO_V1 detected dog with score approximately 0.7493 in the public PyTorch dog photograph. Eight quantized first-convolution patch accumulators were independently checked against torch conv2d. Nine Python test methods pass, including packed vector checks. The new five-file SystemVerilog suite passes static compilation with zero diagnostics; generated bundles match sources. Behavioral execution of this new suite is pending ChipVerify. See [the detailed scope](image_nn.md): full object detection remains software-only; RTL currently implements pixel centering and first-layer accumulation arithmetic.
+
 ## Memory engine integration
 
 The scratchpad and memory-backed DOT4 controller are implemented with a separate integration testbench. Its four canonical files pass static compilation with zero diagnostics using pyslang 12.1.0; its generated bundle passes consistency checking. **User-reported ChipVerify behavioral simulation passed:** `PASS Project04 memory-backed DOT4 engine`, followed by `jobs=7 host_checks=21 request_stalls=2 response_stalls=4` and a normal Verilog `$finish`. This confirms completion of this deterministic integration suite, including exercised request and response backpressure. The simulator version and full compile transcript were not supplied; this was not independently rerun in the assistant browser. See [the memory-engine specification and run instructions](memory_engine.md). The arithmetic-run history below is separate from this new integration status.

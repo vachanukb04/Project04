@@ -60,6 +60,12 @@ See [the work packages and acceptance gates](docs/build_plan.md). The first impl
 
 The eventual system includes a custom CPU and programmable parallel compute engine. CPU integration, live capture, audio, and display output follow numerical correctness of the inference datapath.
 
+## Real image and neural network milestone
+
+A real pretrained software detector identified a dog in a public photograph with score about 0.75. New RTL provides RGB pixel centering and a multiword convolution-patch accumulator. Eight first-layer patches use actual image data and learned model weights. See [the scope, evidence and instructions](docs/image_nn.md).
+
+Use `sim/chipverify_image/design.sv` and `sim/chipverify_image/testbench.sv` with top `tb_p04_image_nn`. The new RTL is statically checked; ChipVerify execution is pending. The full detector currently runs in software, not custom RTL.
+
 ## Simulation
 
 The next integration milestone is implemented: [memory-backed DOT4 engine](docs/memory_engine.md). It adds scratchpad memory, a read/compute/write controller, and a separate self-checking suite. Use the pair of files in `sim/chipverify_memory/` with top `tb_p04_dot4_engine`. Its static checks pass; its behavioral simulation is ready to run in ChipVerify.
