@@ -60,11 +60,24 @@ See [the work packages and acceptance gates](docs/build_plan.md). The first impl
 
 The eventual system includes a custom CPU and programmable parallel compute engine. CPU integration, live capture, audio, and display output follow numerical correctness of the inference datapath.
 
+## Run the Mac camera application
+
+A local Mac application now opens a webcam, draws detected object boxes and names, and optionally speaks labels. See [installation and launch instructions](docs/mac_camera.md). It uses a pretrained **software** detector; the custom RTL is not yet a complete recognition accelerator.
+
+```sh
+python3 -m venv .venv-camera
+source .venv-camera/bin/activate
+python -m pip install -r app/requirements-mac.txt
+python app/mac_camera.py
+```
+
+The same app path passed a saved-image detection test. Live Mac webcam, GUI and speech require local validation. An independent camera-stream RTL capture block and ChipVerify test bundle are in `sim/chipverify_camera/`.
+
 ## Real image and neural network milestone
 
 A real pretrained software detector identified a dog in a public photograph with score about 0.75. New RTL provides RGB pixel centering and a multiword convolution-patch accumulator. Eight first-layer patches use actual image data and learned model weights. See [the scope, evidence and instructions](docs/image_nn.md).
 
-Use `sim/chipverify_image/design.sv` and `sim/chipverify_image/testbench.sv` with top `tb_p04_image_nn`. The new RTL is statically checked; ChipVerify execution is pending. The full detector currently runs in software, not custom RTL.
+Use `sim/chipverify_image/design.sv` and `sim/chipverify_image/testbench.sv` with top `tb_p04_image_nn`. The user reported a passing first-layer ChipVerify suite: 8 real-image patches, 13 jobs, 256 pixel triplets and 132 host checks. The full detector currently runs in software, not custom RTL.
 
 ## Simulation
 

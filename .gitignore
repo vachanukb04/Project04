@@ -17,3 +17,6 @@ __pycache__/
 .env.*
 !.env.example
 .DS_Store
+
+# Local Mac camera environment
+.venv-camera/

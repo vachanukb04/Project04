@@ -1,8 +1,12 @@
 # Verification status
 
+## Mac camera app and camera-stream RTL
+
+The local camera app's saved-image path detected dog at score 0.749295 and saved an annotated image and JSON report. Eleven Python tests passed in the development environment, including frame annotation and latest-frame capture helper checks. Tests used headless OpenCV 4.14.0.94 in Linux; live Mac AVFoundation capture, window display, permission prompts and speech were not exercised. The new abstract camera-stream RTL and testbench pass static compilation with zero diagnostics; their behavioral simulation is pending. The software detector does not execute the custom RTL. See [the execution boundary and run instructions](mac_camera.md).
+
 ## Real image neural network milestone
 
-A CPU software run of pretrained SSDLite320 MobileNet V3 Large COCO_V1 detected dog with score approximately 0.7493 in the public PyTorch dog photograph. Eight quantized first-convolution patch accumulators were independently checked against torch conv2d. Nine Python test methods pass, including packed vector checks. The new five-file SystemVerilog suite passes static compilation with zero diagnostics; generated bundles match sources. Behavioral execution of this new suite is pending ChipVerify. See [the detailed scope](image_nn.md): full object detection remains software-only; RTL currently implements pixel centering and first-layer accumulation arithmetic.
+A CPU software run of pretrained SSDLite320 MobileNet V3 Large COCO_V1 detected dog with score approximately 0.7493 in the public PyTorch dog photograph. Eight quantized first-convolution patch accumulators were independently checked against torch conv2d. Nine Python test methods pass, including packed vector checks. The new five-file SystemVerilog suite passes static compilation with zero diagnostics; generated bundles match sources. The user supplied `PASS Project04 real-image convolution patches`, `real_image_patches=8 jobs=13 pixel_triplets=256 host_checks=132`, and normal Verilog finish. This is user-reported first-layer integration evidence, not full RTL object detection. See [the detailed scope](image_nn.md): full object detection remains software-only; RTL currently implements pixel centering and first-layer accumulation arithmetic.
 
 ## Memory engine integration
 

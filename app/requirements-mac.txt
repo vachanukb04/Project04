@@ -1,0 +1,6 @@
+# Install using normal PyPI on Mac, not the Linux CPU wheel index.
+torch>=2.5,<3
+torchvision>=0.20,<1
+opencv-python>=4.10,<5
+numpy>=1.26,<3
+pillow>=10,<14

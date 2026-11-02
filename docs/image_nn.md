@@ -7,7 +7,7 @@ This milestone connects a real photograph and pretrained model data to a hardwar
 | Path | Implementation | Current evidence |
 | --- | --- | --- |
 | Full image detection | Torchvision SSDLite320 MobileNet V3 Large COCO_V1 on CPU | A public dog photograph produced a dog detection with score about 0.7493 |
-| Learned first-layer arithmetic | Custom RTL packed convolution-patch engine and scratchpad | Eight real-image patch accumulators exported and reference-checked; ChipVerify execution pending |
+| Learned first-layer arithmetic | Custom RTL packed convolution-patch engine and scratchpad | Eight real-image patch accumulators exported and reference-checked; User-reported ChipVerify PASS for eight patches |
 | Pixel centering | Custom RTL RGB888 to signed INT8 stage | 256 RGB triplets and stall checks supplied in the same pending RTL bench |
 
 The software detector covers the pretrained model's 80 COCO object categories. This is a baseline for model behavior, not a claim that all 80 classes now execute in custom RTL. One sample detection is a smoke test, not an accuracy evaluation.
@@ -87,7 +87,7 @@ For optional short waveforms add `--trace-vcd --trace-depth 1` to compile argume
 
 ## Validation
 
-Completed: real pretrained software detection, eight patch sums cross-checked against independent convolution, Python vector/contract checks, static SV compilation and generated-bundle consistency. **Behavioral simulation of the new RTL remains pending ChipVerify execution.** No hardware detection latency, power or full-model accuracy is claimed.
+Completed: real pretrained software detection, eight patch sums cross-checked against independent convolution, Python vector/contract checks, static SV compilation and generated-bundle consistency. **User-reported ChipVerify simulation passed:** 8 real-image patches, 13 jobs, 256 pixel triplets and 132 host checks, followed by normal finish. No hardware detection latency, power or full-model accuracy is claimed.
 
 ```sh
 python3 -m unittest discover -s tests -v
