@@ -1,8 +1,17 @@
 # Verification status
 
-## Persistent feedback learning and visual-memory RTL
+## Restored pretrained basic naming with RTL feedback memory
 
-The new feedback mode needs no manually collected dataset or pretrained model. RTL extracts RGB high-nibble descriptors, searches up to 64 confirmed examples with L1 distance, and returns visual similarity and crop attributes. The Mac handles camera/voice, staged confirmation, label lookup, and atomic persistent storage. This is episodic appearance matching, not semantic neural-network recognition or online weight training.
+Default camera feedback now uses a HYBRID path: pretrained SSDLite COCO naming in Python/PyTorch, followed by detected-object crop extraction and actual RTL descriptor/L1 search/attributes. A strong compatible confirmed memory can override the baseline name. The code exposes model provenance, detector score, memory similarity and prediction source separately. No claim is made that the pretrained model runs in RTL or that confirmations fine-tune its neural weights.
+
+The complete regression passed 35 test methods (51 RTL image simulations across the memory, MLP and new hybrid policy tests). Hybrid tests use controlled software detections, then real RTL, to verify cold-start naming/confirmation, persistent user corrections, crop attributes, incompatible category filtering, weak-match fallback, and unknown-category learning. Controlled phone/laptop labels are policy fixtures, not measured phone/laptop recognition accuracy.
+
+A separate real-model run on the existing public dog photo detected dog at score 0.749295 with empty feedback memory and computed the detected crop's attributes through Icarus. After confirming the name `my dog` and reloading persistent memory, a second actual-model/RTL run returned `my dog` from confirmed memory at similarity 1.0. Native Mac camera/preview/voice remains pending user testing; real phone/laptop recognition through the user's camera has not been measured here. See [current run guide](feedback_learning.md).
+
+
+## Earlier RTL-only feedback milestone
+
+That RTL-only feedback mode needs no manually collected dataset or pretrained model. RTL extracts RGB high-nibble descriptors, searches up to 64 confirmed examples with L1 distance, and returns visual similarity and crop attributes. The Mac handles camera/voice, staged confirmation, label lookup, and atomic persistent storage. This is episodic appearance matching, not semantic neural-network recognition or online weight training.
 
 Development verification: the 12 new test methods passed, including 14 actual Icarus visual-memory simulations. Independent checks cover memory sizes through 64 examples, exact/extreme distance and ties, descriptors, reset cancellation, and input bubbles. A staged correction followed by confirmation changes the next actual RTL prediction and survives file reload; the other object's example is retained. Memory rejection, exact relabeling, eviction, and stale writers pass. Mock voice subprocess tests cover transcript/error transport and cancellation; they do not validate Apple transcription. The complete final regression passed all 28 test methods, including the prior MLP/arithmetic tests (42 image simulations across the new memory and existing MLP suites). Offline CLI teaching followed by a separate invocation correctly restores the learned label.
 

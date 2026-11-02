@@ -34,6 +34,8 @@ class LatestFrame:
         self.stop.set();self.thread.join(timeout=2);self.capture.release()
 
 def load_detector():
+    from rtl_camera.pretrained import setup_certificates
+    setup_certificates()
     torch.set_num_threads(2)
     torch.hub.set_dir(str(ROOT/'build/image_nn/torch'))
     weights=SSDLite320_MobileNet_V3_Large_Weights.COCO_V1

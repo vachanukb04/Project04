@@ -4,7 +4,7 @@
 
 Custom CPU and GPU hardware in SystemVerilog for looking at an everyday object, identifying it, and displaying or speaking its name.
 
-The new Mac test path captures a stable center crop and runs a small custom-trained classifier in actual SystemVerilog simulation. The Mac handles camera access, preview, and speech; FPGA and chip interfaces come later.
+The default Mac test path now combines pretrained software object detection with RTL feedback memory and image attributes. A separate small custom-trained classifier runs full inference in RTL. Camera, preview and speech use the Mac; FPGA and chip interfaces come later.
 
 ## Initial scope
 
@@ -14,17 +14,22 @@ The new Mac test path captures a stable center crop and runs a small custom-trai
 - Begin with stored images and a software numerical reference before adding live camera input.
 - Defer CPU firmware, FPGA selection, and wearable integration.
 
-## Feedback learning from your camera
+## Basic object recognition plus feedback learning
 
-**New: no manual 20-view dataset is required for feedback mode.** Run:
+The default camera feedback path now includes the pretrained COCO detector from the original working demo. It can name supported objects such as **phone, laptop, chair, bottle, cup and keyboard without first teaching those categories**. Confirmations and corrections build persistent examples for later views; there is no 20-view collection requirement.
 
 ```bash
+git pull
+source .venv-camera/bin/activate
+python -m pip install -r app/requirements-hybrid-camera.txt
 python app/mac_rtl_camera.py learn --speak --voice
 ```
 
-Read [setup, voice feedback, and persistent memory](docs/feedback_learning.md). The app captures a stable view, asks you to confirm/correct its tentative guess, and saves confirmed examples across restarts. Y confirms, N rejects, C enters a name, V listens, and Space captures the next view. Voice corrections are staged for confirmation before saving. Native voice requires Apple command-line tools and local microphone/speech permission; typed feedback is available without the helper.
+Read [setup and learning behavior](docs/feedback_learning.md). **Execution is HYBRID:** pretrained neural detection runs in Python/PyTorch; descriptor extraction, remembered-example distance/similarity, and crop attributes run in SystemVerilog simulation. The full pretrained detector is not implemented in RTL. The app identifies the prediction source.
 
-The new `p04_visual_memory.sv` performs descriptor extraction, nearest-example matching, similarity, and crop attributes in actual RTL simulation. This is **simple appearance memory, not a pretrained visual model**: empty memory asks for a name, and similarity does not establish semantic correctness. A learned example can improve later matches but is not guaranteed to recognize new angles or similar-looking products. No manufacturer/model specifications are inferred.
+The detector receives the full captured frame, selects an object, and passes that object's crop to RTL. Compatible confirmed views can override its name when the appearance match is sufficiently close. Corrections persist across restarts; weak or incompatible memory matches leave the pretrained name in place. Existing memories are preserved, with crop/context compatibility checks. Exact product variants and manufacturer specifications are not inferred.
+
+Y confirms, N rejects, C types a correction, V listens, and Space captures the next stable view. Use `--recognizer rtl-only` to retain the prior memory-only behavior without a software detector. Native voice still needs Apple command-line tools and permission. Icarus must be installed locally.
 
 ## Previous custom-trained MLP path
 

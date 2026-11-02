@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Learn from confirmed camera feedback; RTL performs visual-memory matching."""
+"""Pretrained software object naming plus persistent RTL feedback memory."""
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 import json
@@ -14,6 +14,7 @@ from rtl_camera.bridge import ROOT,Stability
 from rtl_camera.feedback import FeedbackMemory,FeedbackSession
 from rtl_camera.memory_bridge import compile_memory,infer_memory
 from rtl_camera.voice import build_voice,listen_once
+from rtl_camera.pretrained import BasicDetector,infer_hybrid
 
 TITLE='Project04 feedback | Y yes | N no | C type | V voice | SPACE next | Q quit'
 
@@ -24,6 +25,9 @@ def main(argv=None):
     ap.add_argument('--memory',type=Path,default=ROOT/'build/rtl_camera/feedback/memory.json')
     ap.add_argument('--build',type=Path,default=ROOT/'build/rtl_camera/feedback/run')
     ap.add_argument('--camera',type=int,default=0)
+    ap.add_argument('--recognizer',choices=['hybrid','rtl-only'],default='hybrid',help='hybrid: pretrained software naming plus RTL memory; rtl-only: previous appearance memory')
+    ap.add_argument('--threshold',type=float,default=.45,help='Pretrained detector minimum score')
+    ap.add_argument('--memory-threshold',type=float,default=.94,help='Minimum RTL appearance similarity for a confirmed memory to override pretrained naming')
     ap.add_argument('--speak',action='store_true')
     ap.add_argument('--voice',action='store_true',help='Listen once after each guess, and on V; requires Apple command-line tools')
     ap.add_argument('--allow-network-voice',action='store_true',help='Explicitly allow Apple Speech network processing if used')
@@ -34,6 +38,7 @@ def main(argv=None):
     ap.add_argument('--inspect-memory',action='store_true')
     args=ap.parse_args(argv)
     if args.motion<=0 or args.sharpness<0:ap.error('Invalid motion/sharpness')
+    if not 0<=args.threshold<=1 or not 0<=args.memory_threshold<=1:ap.error('Thresholds must be 0..1')
     if args.teach and not args.image:ap.error('--teach requires --image; use C or voice to teach live frames')
     if args.allow_network_voice and not args.voice:ap.error('--allow-network-voice requires --voice')
     memory=FeedbackMemory(args.memory)
@@ -41,12 +46,20 @@ def main(argv=None):
         print(json.dumps({'revision':memory.data['revision'],'views':len(memory.examples),
             'labels':sorted(set(e['label'] for e in memory.examples))},indent=2));return
     executable=compile_memory(args.build)
+    detector=None
+    if args.recognizer=='hybrid':
+        print('HYBRID mode: basic object names from pretrained SOFTWARE; matching and crop attributes from RTL.',flush=True)
+        print('Loading official pretrained detector (cached after first download)...',flush=True)
+        detector=BasicDetector(args.threshold)
+    def recognize(frame,examples):
+        if detector is not None:return infer_hybrid(frame,examples,args.build,executable,detector,args.memory_threshold)
+        return infer_memory(rgb_input(crop_frame(frame)[0]),examples,args.build,executable)
     if args.image:
         frame=cv2.imread(str(args.image))
         if frame is None:ap.error('Cannot read image')
-        report=infer_memory(rgb_input(crop_frame(frame)[0]),memory.examples,args.build,executable)
+        report=recognize(frame,memory.examples)
         print(json.dumps(public_report(report),indent=2))
-        if args.teach:print(json.dumps(memory.learn(report['descriptor'],args.teach),indent=2))
+        if args.teach:print(json.dumps(memory.learn(report['descriptor'],args.teach,context=report.get('learning_context')),indent=2))
         return
     if (args.voice or args.speak) and platform.system()!='Darwin':ap.error('Speech and microphone require macOS; omit these flags for typed feedback')
     voice_binary=None
@@ -55,7 +68,8 @@ def main(argv=None):
         try:voice_binary=build_voice(args.build)
         except (RuntimeError,subprocess.TimeoutExpired) as exc:print(f'Voice unavailable: {exc}\nUse C/Y/N feedback instead.',flush=True)
     print(f'Loaded {len(memory.examples)} confirmed views. No dataset or model training required.',flush=True)
-    print('Names come from your feedback, not pretrained knowledge. Similarity is not recognition probability.',flush=True)
+    print('Pretrained names need no user training. Corrections are stored only after confirmation.' if detector else 'RTL-only mode: names come from your feedback; no pretrained naming.',flush=True)
+    print('Similarity and detector scores are different measures; neither guarantees correctness.',flush=True)
     camera=Camera(args.camera);stability=Stability(motion_limit=args.motion,sharpness_min=args.sharpness)
     pool=ThreadPoolExecutor(max_workers=2);inference=None;voice=None;speech=None;voice_cancel=threading.Event()
     armed=True;auto_listen=False;typing=False;typed='';session=None;report=None;captured=None
@@ -90,7 +104,10 @@ def main(argv=None):
                 report=inference.result();inference=None
                 session=FeedbackSession(memory,report)
                 status='Y confirm | N reject | C type correction | V speak correction'
-                result_lines=[f'Tentative: {report["label"]} | similarity {report["similarity_score"]:.0%}',
+                source=report.get('prediction_source','rtl_memory')
+                detail=(f'Pretrained score {report["detector_score"]:.0%}' if report.get('detector_score') is not None else 'No pretrained detection')
+                result_lines=[f'Tentative: {report["label"]} | {source}',
+                    f'{detail} | memory similarity {report["similarity_score"]:.0%}',
                     f'Crop: {report["crop_color"]}; brightness {report["crop_brightness"]}/255']
                 print(json.dumps(public_report(report),indent=2),flush=True)
                 prompt=(f'My guess is {report["label"]}. Is that correct?' if session.guess else 'I have not learned this object. Say this is, followed by its name.')
@@ -112,15 +129,22 @@ def main(argv=None):
                 auto_listen=False;status='Listening up to 8 seconds: yes, no, or this is ...'
                 voice=pool.submit(listen_once,voice_binary,args.allow_network_voice,voice_cancel)
             if armed and ready:
-                armed=False;captured=crop.copy();result_lines=[]
-                inference=pool.submit(infer_memory,rgb_input(crop),memory.examples,args.build,executable)
-                status='RTL searching confirmed memory...'
+                armed=False;captured=frame.copy();result_lines=[]
+                inference=pool.submit(recognize,captured.copy(),memory.examples)
+                status='HYBRID detecting object + RTL memory...' if detector else 'RTL searching confirmed memory...'
             if session is not None and session.committed and result_lines:
                 result_lines[0]=f'Confirmed: {session.guess} | saved for future views'
-            output=frame.copy();cv2.rectangle(output,(x,y),(x+side,y+side),(0,220,0),2)
+            # Results are drawn on the captured frame; a live frame may already show another object.
+            output=captured.copy() if report is not None and captured is not None else frame.copy()
+            cv2.rectangle(output,(x,y),(x+side,y+side),(100,160,100),1)
+            if report is not None and report.get('box_xyxy'):
+                bx1,by1,bx2,by2=report['box_xyxy'];cv2.rectangle(output,(bx1,by1),(bx2,by2),(0,255,0),2)
             if armed:status=f'Hold still/in focus: {min(elapsed,5):.1f}/5.0 seconds'
             if captured is not None and min(output.shape[:2])>=128:
-                output[-120:-8,-120:-8]=cv2.resize(captured,(112,112))
+                region=crop_frame(captured)[0]
+                if report is not None and report.get('query_region_xyxy'):
+                    rx1,ry1,rx2,ry2=report['query_region_xyxy'];region=captured[ry1:ry2,rx1:rx2]
+                output[-120:-8,-120:-8]=cv2.resize(region,(112,112))
                 cv2.putText(output,'Captured view',(output.shape[1]-120,output.shape[0]-125),cv2.FONT_HERSHEY_SIMPLEX,.4,(0,255,255),1)
             lines=([f'Type name: {typed}_ | ENTER review | ESC cancel'] if typing else [status])+result_lines
             if session is not None and session.pending and not session.committed:lines.append(f'Confirm label: {session.pending} | Y save | N discard')

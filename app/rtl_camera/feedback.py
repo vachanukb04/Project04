@@ -42,14 +42,19 @@ class FeedbackMemory:
             if type(ex.get('confirmations')) is not int or ex['confirmations']<1:raise ValueError('Invalid confirmation count')
     @property
     def examples(self):return copy.deepcopy(self.data['examples'])
-    def learn(self,descriptor,label):
+    def learn(self,descriptor,label,context=None):
         self.path.parent.mkdir(parents=True,exist_ok=True)
         with self.path.with_suffix('.lock').open('a') as lock:
             try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
             except BlockingIOError:raise RuntimeError('Another camera process is updating feedback memory. Retry later.')
-            return self._learn_locked(descriptor,label)
-    def _learn_locked(self,descriptor,label):
+            return self._learn_locked(descriptor,label,context)
+    def _learn_locked(self,descriptor,label,context=None):
         descriptor=descriptor_values(descriptor);label=label_text(label)
+        if context is not None:
+            if context.get('descriptor_scope') not in ('detected-object-v1','center-crop-v1'):
+                raise ValueError('Unsupported descriptor context')
+            if context.get('base_label') is not None:label_text(context['base_label'])
+            context=copy.deepcopy(context)
         # Refuse overwriting another process's updates. Single writer only.
         if self.path.exists():
             if json.loads(self.path.read_text()).get('revision')!=self.data['revision']:
@@ -59,14 +64,15 @@ class FeedbackMemory:
         canonical=next((e['label'] for e in examples if e['label'].casefold()==label.casefold()),label)
         label=canonical
         prior=None;evicted=None
-        exact=next((e for e in examples if e['descriptor']==descriptor),None)
+        exact=next((e for e in examples if e['descriptor']==descriptor and (e.get('context')==context or (not e.get('context') and context and context['descriptor_scope']=='center-crop-v1'))),None)
         if exact is not None:
             prior=exact['label'];exact['label']=label;exact['confirmations']+=1;exact['updated_at']=now
+            if context is not None:exact['context']=context
         else:
             if len(examples)==CAPACITY:
                 oldest=min(range(len(examples)),key=lambda n:examples[n]['updated_at'])
                 evicted=examples.pop(oldest)['label']
-            examples.append({'label':label,'descriptor':descriptor.copy(),'confirmations':1,'updated_at':now})
+            examples.append({'label':label,'descriptor':descriptor.copy(),'confirmations':1,'updated_at':now,**({'context':context} if context is not None else {})})
         update['revision']+=1
         update['events'].append({'time':now,'label':label,'previous_label':prior,'evicted_label':evicted})
         update['events']=update['events'][-256:]
@@ -99,7 +105,8 @@ class FeedbackSession:
     """Bind confirmations to the captured result, not the moving live camera."""
     def __init__(self,memory,report):
         self.memory=memory;self.descriptor=descriptor_values(report['descriptor']).copy()
-        self.guess=report['label'] if report['best_slot']!=255 else None
+        self.guess=report['label'] if report.get('has_guess',report['best_slot']!=255) else None
+        self.context=copy.deepcopy(report.get('learning_context'))
         self.pending=None;self.committed=False;self.rejected=False
     def propose(self,label):
         self.pending=label_text(label);self.rejected=False
@@ -108,7 +115,7 @@ class FeedbackSession:
         if self.committed:return 'Already saved this view. SPACE for another view.'
         label=self.pending or (None if self.rejected else self.guess)
         if label is None:return 'No name to confirm. C to type or V: say "this is ...".'
-        saved=self.memory.learn(self.descriptor,label);self.committed=True
+        saved=self.memory.learn(self.descriptor,label,context=self.context);self.committed=True
         self.guess=saved['label'];self.pending=None;self.rejected=False
         return f'Learned {saved["label"]}; {saved["examples"]} confirmed views. SPACE for next.'
     def reject(self):

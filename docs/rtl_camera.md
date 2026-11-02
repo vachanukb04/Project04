@@ -1,6 +1,6 @@
 # Mac camera -> real SystemVerilog inference -> overlay and speech
 
-**For learning from confirmations/corrections without a 20-view dataset, use the newer [feedback learning mode](feedback_learning.md): `python app/mac_rtl_camera.py learn --speak --voice`.** This page describes the separate offline-trained MLP path, which still requires labeled captures. Feedback mode uses appearance memory rather than this neural network.
+**For learning from confirmations/corrections without a 20-view dataset, use the newer [feedback learning mode](feedback_learning.md): `python app/mac_rtl_camera.py learn --speak --voice`.** This page describes the separate offline-trained MLP path, which still requires labeled captures. Default feedback mode now combines pretrained software detection with RTL appearance memory; use `--recognizer rtl-only` for memory without software detection. This remains separate from the neural network described below.
 
 This is a small **custom-trained, single-center-crop classifier**, not the earlier pretrained COCO software detector. It has no pretrained everyday-object model. Collect labeled examples of your objects, train once, and run the exported network in actual RTL simulation. Up to 16 trained labels are supported. General everyday detection, multiple boxes, OCR, manufacturer recognition, and exact product identification are not implemented here.
 
