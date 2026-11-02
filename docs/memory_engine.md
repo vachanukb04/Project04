@@ -45,7 +45,7 @@ The test checks normal result 80, destination/source aliasing, overflow, masked 
 
 ## Validation status
 
-Static parsing, type checking and elaboration pass with zero diagnostics using pyslang 12.1.0. The generated source bundle is checked against canonical files. **Behavioral simulation of this new integration suite is pending execution in ChipVerify.** It is not yet a measured hardware performance result, a complete GPU or object detector.
+Static parsing, type checking and elaboration pass with zero diagnostics using pyslang 12.1.0. The generated source bundle is checked against canonical files. **User-reported ChipVerify behavioral simulation passed:** `PASS Project04 memory-backed DOT4 engine`, followed by `jobs=7 host_checks=21 request_stalls=2 response_stalls=4` and a normal Verilog `$finish`. This confirms completion of this deterministic integration suite, including exercised request and response backpressure. The simulator version and full compile transcript were not supplied; this was not independently rerun in the assistant browser. This is functional test evidence, not measured hardware performance or complete object recognition.
 
 Rebuild and check:
 

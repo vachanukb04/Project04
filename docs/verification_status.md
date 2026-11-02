@@ -2,7 +2,7 @@
 
 ## Memory engine integration
 
-The scratchpad and memory-backed DOT4 controller are implemented with a separate integration testbench. Its four canonical files pass static compilation with zero diagnostics using pyslang 12.1.0; its generated bundle passes consistency checking. Behavioral execution of **this new suite** is pending ChipVerify. See [the memory-engine specification and run instructions](memory_engine.md). The arithmetic-run history below is separate from this new integration status.
+The scratchpad and memory-backed DOT4 controller are implemented with a separate integration testbench. Its four canonical files pass static compilation with zero diagnostics using pyslang 12.1.0; its generated bundle passes consistency checking. **User-reported ChipVerify behavioral simulation passed:** `PASS Project04 memory-backed DOT4 engine`, followed by `jobs=7 host_checks=21 request_stalls=2 response_stalls=4` and a normal Verilog `$finish`. This confirms completion of this deterministic integration suite, including exercised request and response backpressure. The simulator version and full compile transcript were not supplied; this was not independently rerun in the assistant browser. See [the memory-engine specification and run instructions](memory_engine.md). The arithmetic-run history below is separate from this new integration status.
 
 ## Completed checks
 
@@ -12,7 +12,7 @@ The scratchpad and memory-backed DOT4 controller are implemented with a separate
 
 These checks are not a behavioral RTL simulation.
 
-## Pending behavioral regression
+## Standalone arithmetic regression history
 
 ChipVerify Lab was opened, the design and testbench bundles were loaded, Verilator was selected, and a simulation was requested. The platform responded: **Please sign in with Google to run simulations**. Its subsequent sign-in page also states that continuing agrees to ChipVerify's Terms and Conditions. No behavioral simulator result or passing RTL regression is claimed.
 
