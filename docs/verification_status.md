@@ -12,6 +12,10 @@ These checks are not a behavioral RTL simulation.
 
 ChipVerify Lab was opened, the design and testbench bundles were loaded, Verilator was selected, and a simulation was requested. The platform responded: **Please sign in with Google to run simulations**. Its subsequent sign-in page also states that continuing agrees to ChipVerify's Terms and Conditions. No behavioral simulator result or passing RTL regression is claimed.
 
+The user subsequently reported a successful platform status in Safari, followed by a traced run reporting **VCD output exceeded 100 MB**, **File size limit exceeded**, and a core-dump/timeout message alongside a green success banner. The project-specific PASS line and counters have not been supplied. The resource-limited run is incomplete or failed evidence; it does not establish an arithmetic PASS or an RTL arithmetic failure.
+
+The testbench now separates the full untraced regression from a `+WAVES` smoke run of 520 cycles. Only the full run can print `PASS Project04 arithmetic regression` and must report `exhaustive_byte_pairs=65536`. The waveform run prints `PASS Project04 waveform smoke test (not full regression)` and reports zero exhaustive pairs. Static compilation and bundle consistency were rechecked for this change; the revised modes still need execution in ChipVerify.
+
 The testbench is designed to exercise:
 
 - Every one of the 65536 signed INT8 bit-pattern pairs in one DOT4 byte position with the other products zero.

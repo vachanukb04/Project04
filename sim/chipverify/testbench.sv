@@ -113,15 +113,24 @@ module tb_p04_arithmetic;
     int dot_stalls = 0, simd_stalls = 0, requant_stalls = 0;
     int overflow_seen = 0, config_error_seen = 0, masked_seen = 0;
     int reset_pending_seen = 0, exhaustive_accepted = 0;
+    bit wave_mode;
+    int random_cycles, total_cycles;
 
     initial begin
-        if ($test$plusargs("WAVES")) begin
+        wave_mode = $test$plusargs("WAVES");
+        random_cycles = wave_mode ? 512 : 1024;
+        total_cycles = wave_mode ? 520 : 66600;
+        if (wave_mode) begin
+            $display("MODE waveform smoke: 512 stimulus cycles plus 8 drain cycles; not full regression");
             $dumpfile("p04_arithmetic.vcd");
             $dumpvars(0, tb_p04_arithmetic);
+        end else begin
+            $display("MODE full regression: 66600 cycles; waveform dumping disabled");
         end
 
-        // 1024 directed/random cycles, drain, all 65536 byte pairs, drain.
-        for (int cycle = 0; cycle < 66600; cycle = cycle + 1) begin
+        // Full: random traffic, drain, all 65536 byte pairs, drain.
+        // +WAVES: short directed/random smoke test, drain, finish.
+        for (int cycle = 0; cycle < total_cycles; cycle = cycle + 1) begin
             @(negedge clk);
             rst_n = !((cycle < 2) || (cycle == 27) || (cycle == 28)
                     || (cycle == 197));
@@ -134,7 +143,7 @@ module tb_p04_arithmetic;
             end
 
             // A source holds its request until accepted, including under stalls.
-            if ((cycle < 1024) && (!d_hold || !rst_n)) begin
+            if ((cycle < random_cycles) && (!d_hold || !rst_n)) begin
                 d_iv = (rand32() % 5 != 0);
                 d_a = rand32(); d_b = rand32(); d_acc = $signed(rand32());
                 if (cycle < 18) d_iv = 1;
@@ -147,7 +156,7 @@ module tb_p04_arithmetic;
                     default: begin end
                 endcase
             end
-            if ((cycle < 1024) && (!s_hold || !rst_n)) begin
+            if ((cycle < random_cycles) && (!s_hold || !rst_n)) begin
                 s_iv = (rand32() % 5 != 0);
                 s_mask = 8'(rand32());
                 for (int lane = 0; lane < 8; lane = lane + 1) begin
@@ -166,7 +175,7 @@ module tb_p04_arithmetic;
                     end
                 end
             end
-            if ((cycle < 1024) && (!q_hold || !rst_n)) begin
+            if ((cycle < random_cycles) && (!q_hold || !rst_n)) begin
                 q_iv = (rand32() % 5 != 0);
                 q_acc = $signed(rand32());
                 q_multiplier = 31'(rand32());
@@ -193,13 +202,13 @@ module tb_p04_arithmetic;
                 end
             end
 
-            if (cycle >= 1024) begin
+            if (cycle >= random_cycles) begin
                 // Stop random traffic and flush before exhaustive scalar tests.
                 d_or = 1; s_or = 1; q_or = 1;
                 if (!d_hold) d_iv = 0;
                 if (!s_hold) s_iv = 0;
                 if (!q_hold) q_iv = 0;
-                if ((cycle >= 1056) && (cycle < 66592)) begin
+                if (!wave_mode && (cycle >= 1056) && (cycle < 66592)) begin
                     d_iv = 1;
                     d_a = $unsigned((cycle - 1056) % 256);
                     d_b = $unsigned((cycle - 1056) / 256);
@@ -284,12 +293,17 @@ module tb_p04_arithmetic;
 
         if (d_pending || s_pending || q_pending)
             $fatal(1, "Regression ended without draining pending results");
-        if ((exhaustive_accepted != 65536) || (simd_accepted < 100) || (requant_accepted < 100)
+        if ((!wave_mode && (exhaustive_accepted != 65536))
+         || (wave_mode && (exhaustive_accepted != 0))
+         || (simd_accepted < 100) || (requant_accepted < 100)
          || (dot_stalls == 0) || (simd_stalls == 0) || (requant_stalls == 0)
          || (overflow_seen == 0) || (config_error_seen == 0)
          || (masked_seen == 0) || (reset_pending_seen == 0))
             $fatal(1, "Required coverage condition was not exercised");
-        $display("PASS Project04 arithmetic regression");
+        if (wave_mode)
+            $display("PASS Project04 waveform smoke test (not full regression)");
+        else
+            $display("PASS Project04 arithmetic regression");
         $display("accepted dot4=%0d simd=%0d requant=%0d exhaustive_byte_pairs=%0d",
             dot_accepted, simd_accepted, requant_accepted, exhaustive_accepted);
         $display("stalls dot4=%0d simd=%0d requant=%0d overflow_cases=%0d config_errors=%0d masked_vectors=%0d reset_pending=%0d",

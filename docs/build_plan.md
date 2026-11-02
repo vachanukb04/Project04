@@ -10,7 +10,7 @@ Develop in SystemVerilog with self-checking ChipVerify simulations. CPU firmware
 
 | Package | Work | Exit criterion | Status |
 | --- | --- | --- | --- |
-| 1 Arithmetic | Scalar DOT4, eight-lane arithmetic slice, requantization, backpressure/reset behavior | Static compilation plus passing behavioral arithmetic regression | RTL and tests written; static compile passes; ChipVerify simulation pending sign-in |
+| 1 Arithmetic | Scalar DOT4, eight-lane arithmetic slice, requantization, backpressure/reset behavior | Static compilation plus passing behavioral arithmetic regression | RTL and tests written; static compile passes; full ChipVerify PASS evidence pending; waveform smoke mode added after a reported 100 MB trace limit |
 | 2 Model contract | Profile compact pretrained detectors and freeze one graph, label map, tensor plan, numerical rules, and accuracy target | Supported operator list, weights provenance, memory/compute estimates, and golden tensors | Planned |
 | 3 Memory movement | Banked scratchpad, tile buffers, bounded DMA, ownership and error handling | Randomized access/stall/reset tests and data-integrity scoreboard pass | Planned after tile requirements are known |
 | 4 Neural kernels | Convolution, depthwise convolution if needed, activation, pooling, and tensor operations | Each supported layer matches the selected model's integer reference | Planned |
@@ -35,4 +35,4 @@ See [the arithmetic specification](arithmetic_spec.md), [the ChipVerify run proc
 
 ## Next executable step
 
-Complete ChipVerify sign-in, compile the supplied bundle with top `tb_p04_arithmetic`, run the regression, and resolve any simulator diagnostics or functional failures. Preserve the console result and exact source hashes. Package 1 is not behaviorally verified until that succeeds.
+Load the latest supplied bundle into ChipVerify with top `tb_p04_arithmetic`, run the full regression with empty runtime arguments, and resolve any simulator diagnostics or functional failures. Use the separate `+WAVES` mode for a short waveform test. Preserve the console result and exact source hashes. Package 1 is not behaviorally verified until the full regression succeeds.

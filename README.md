@@ -18,7 +18,7 @@ The first development target is a verified inference datapath operating on store
 
 The first arithmetic RTL is implemented: scalar INT8 DOT4 with INT32 accumulation, an eight-lane SIMD arithmetic slice, and a configurable INT8 requantizer. Self-checking SystemVerilog tests and a Python numerical reference are included.
 
-Seven Python reference tests pass, and the four canonical SystemVerilog files pass static compilation with zero diagnostics. **Behavioral RTL simulation is pending ChipVerify sign-in.** No trained model or end-to-end object-recognition result is claimed. See [verification status](docs/verification_status.md).
+Seven Python reference tests pass, and the four canonical SystemVerilog files pass static compilation with zero diagnostics. **Full behavioral RTL verification is pending confirmed PASS output.** A user-reported traced run hit ChipVerify's 100 MB waveform limit; the testbench now separates the full untraced regression from a short waveform smoke test. No trained model or end-to-end object-recognition result is claimed. See [verification status](docs/verification_status.md).
 
 ## Repository structure
 
